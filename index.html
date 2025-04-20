@@ -1,141 +1,596 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Romantic Spin the Wheel</title>
-  <style>
-    body {
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      background: linear-gradient(to right, #ffe6ec, #e0f7fa);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    h1 {
-      color: #ff4d6d;
-    }
-
-    .wheel-container {
-      position: relative;
-      width: 300px;
-      height: 300px;
-      margin: 20px;
-    }
-
-    canvas {
-      border-radius: 50%;
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
-
-    #spinBtn {
-      background-color: #ff4d6d;
-      color: white;
-      padding: 10px 20px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-
-    #result {
-      margin-top: 20px;
-      font-size: 22px;
-      font-weight: bold;
-      color: #333;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relationship Activity Wheel</title>
+    <style>
+        :root {
+            --primary: #ff6b6b;
+            --secondary: #4ecdc4;
+            --dark: #292f36;
+            --light: #f7fff7;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
+        }
+        
+        .wheel-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+        
+        .wheel {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            max-width: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+        }
+        
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            z-index: 10;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .pointer {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid var(--primary);
+            z-index: 5;
+        }
+        
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #3db9b1;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .spin-btn {
+            background-color: var(--primary);
+            font-size: 1.2rem;
+            padding: 15px;
+        }
+        
+        .spin-btn:hover {
+            background-color: #ff5252;
+        }
+        
+        .activity-manager {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .add-activity {
+            display: grid;
+            grid-template-columns: 1fr 80px;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .add-activity input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .activities-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .activity-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+            border-left-color: #aaa;
+        }
+        
+        .activity-item .activity-text {
+            flex: 1;
+        }
+        
+        .activity-item .activity-points {
+            margin: 0 10px;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+        
+        .activity-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .activity-actions button {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        
+        .delete-btn {
+            background-color: #ff6b6b;
+        }
+        
+        .delete-btn:hover {
+            background-color: #ff5252;
+        }
+        
+        .complete-btn {
+            background-color: #6bcb77;
+        }
+        
+        .complete-btn:hover {
+            background-color: #55b263;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem;
+        }
+        
+        .stats-item {
+            text-align: center;
+        }
+        
+        .stats-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .result-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .result-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .result-activity {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .result-points {
+            font-size: 1.4rem;
+            color: var(--secondary);
+            margin-top: 0.5rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 767px) {
+            .wheel {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .container {
+                gap: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>🎡 Our Romantic Wheel 🎡</h1>
-  <div class="wheel-container">
-    <canvas id="wheel" width="300" height="300"></canvas>
-  </div>
-  <button id="spinBtn">Spin the Wheel!</button>
-  <div id="result"></div>
+    <header>
+        <h1>Relationship Activity Wheel</h1>
+        <p>Add activities, spin the wheel, have fun together!</p>
+    </header>
+    
+    <div class="container">
+        <div class="wheel-container">
+            <div class="wheel-wrapper">
+                <div class="pointer"></div>
+                <div class="wheel" id="wheel">
+                    <!-- The wheel segments will be added dynamically -->
+                </div>
+                <div class="wheel-center"></div>
+            </div>
+            
+            <div class="controls">
+                <button class="spin-btn" id="spin-btn">SPIN THE WHEEL</button>
+            </div>
+            
+            <div class="result-container hidden" id="result-container">
+                <div class="result-title">Your activity is:</div>
+                <div class="result-activity" id="result-activity"></div>
+                <div class="result-points" id="result-points"></div>
+                <button class="complete-btn" id="complete-result-btn">Mark as Completed</button>
+            </div>
+        </div>
+        
+        <div class="activity-manager">
+            <h2>Activities</h2>
+            <div class="add-activity">
+                <input type="text" id="activity-input" placeholder="Add a new activity...">
+                <input type="number" id="points-input" placeholder="Points" min="1" value="10">
+                <button id="add-btn">Add</button>
+            </div>
+            
+            <div class="activities-list" id="activities-list">
+                <!-- Activities will be added here dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="stats">
+        <div class="stats-item">
+            <div class="stats-label">Total Activities</div>
+            <div class="stats-value" id="total-activities">0</div>
+        </div>
+        <div class="stats-item">
+            <div class="stats-label">Completed</div>
+            <div class="stats-value" id="completed-activities">0</div>
+        </div>
+        <div class="stats-item">
+            <div class="stats-label">Points Earned</div>
+            <div class="stats-value" id="total-points">0</div>
+        </div>
+    </div>
 
-  <script>
-    const items = [
-      "Picnic at East Coast",
-      "Cooking night together",
-      "Try a new bar 🍸",
-      "Go dancing 💃",
-      "Binge-watch a series 📺",
-      "Take a walk under the stars 🌌",
-      "Paint each other 🎨",
-      "Random MRT stop adventure 🚇",
-    ];
-
-    const colors = ["#FFD6E8", "#E2F0CB", "#FFBCBC", "#C2E9FB", "#FFE0AC", "#D3B5E5", "#B2F7EF", "#FFDAC1"];
-
-    const canvas = document.getElementById("wheel");
-    const ctx = canvas.getContext("2d");
-    const center = canvas.width / 2;
-    const radius = center;
-
-    let anglePerItem = (2 * Math.PI) / items.length;
-    let startAngle = 0;
-
-    function drawWheel() {
-      for (let i = 0; i < items.length; i++) {
-        const angle = startAngle + i * anglePerItem;
-        ctx.beginPath();
-        ctx.moveTo(center, center);
-        ctx.arc(center, center, radius, angle, angle + anglePerItem, false);
-        ctx.fillStyle = colors[i % colors.length];
-        ctx.fill();
-        ctx.save();
-        ctx.translate(center, center);
-        ctx.rotate(angle + anglePerItem / 2);
-        ctx.textAlign = "right";
-        ctx.fillStyle = "#333";
-        ctx.font = "14px Arial";
-        ctx.fillText(items[i], radius - 10, 5);
-        ctx.restore();
-      }
-    }
-
-    drawWheel();
-
-    let isSpinning = false;
-
-    document.getElementById("spinBtn").addEventListener("click", () => {
-      if (isSpinning) return;
-      isSpinning = true;
-      const spinAngle = Math.random() * 360 + 720;
-      let rotation = 0;
-      const duration = 4000;
-      const startTime = performance.now();
-
-      function animate(time) {
-        const elapsed = time - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeOut = 1 - Math.pow(1 - progress, 4);
-        rotation = easeOut * spinAngle;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.save();
-        ctx.translate(center, center);
-        ctx.rotate((rotation * Math.PI) / 180);
-        ctx.translate(-center, -center);
-        drawWheel();
-        ctx.restore();
-
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          isSpinning = false;
-          const index = Math.floor((items.length - (rotation % 360) / 360 * items.length)) % items.length;
-          document.getElementById("result").textContent = `This week: ${items[index]} 💖`;
+    <script>
+        // Store activities with their points and completion status
+        let activities = JSON.parse(localStorage.getItem('activities')) || [];
+        let totalPoints = parseInt(localStorage.getItem('totalPoints')) || 0;
+        let isSpinning = false;
+        
+        // DOM elements
+        const wheel = document.getElementById('wheel');
+        const spinBtn = document.getElementById('spin-btn');
+        const activityInput = document.getElementById('activity-input');
+        const pointsInput = document.getElementById('points-input');
+        const addBtn = document.getElementById('add-btn');
+        const activitiesList = document.getElementById('activities-list');
+        const resultContainer = document.getElementById('result-container');
+        const resultActivity = document.getElementById('result-activity');
+        const resultPoints = document.getElementById('result-points');
+        const completeResultBtn = document.getElementById('complete-result-btn');
+        const totalActivitiesEl = document.getElementById('total-activities');
+        const completedActivitiesEl = document.getElementById('completed-activities');
+        const totalPointsEl = document.getElementById('total-points');
+        
+        // Colors for the wheel segments
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#FFE66D', '#1A535C', '#F9CB40',
+            '#FF8360', '#E84855', '#3185FC', '#F78764', '#6BCB77'
+        ];
+        
+        // Initialize
+        function init() {
+            renderActivities();
+            updateStats();
+            drawWheel();
+            
+            // Event listeners
+            addBtn.addEventListener('click', addActivity);
+            spinBtn.addEventListener('click', spinWheel);
+            completeResultBtn.addEventListener('click', completeSelectedActivity);
+            
+            activityInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addActivity();
+                }
+            });
         }
-      }
-
-      requestAnimationFrame(animate);
-    });
-  </script>
+        
+        // Add a new activity
+        function addActivity() {
+            const name = activityInput.value.trim();
+            const points = parseInt(pointsInput.value) || 10;
+            
+            if (name) {
+                activities.push({
+                    id: Date.now(),
+                    name,
+                    points,
+                    completed: false
+                });
+                
+                saveActivities();
+                activityInput.value = '';
+                pointsInput.value = '10';
+                activityInput.focus();
+            }
+        }
+        
+        // Render the activities list
+        function renderActivities() {
+            activitiesList.innerHTML = '';
+            
+            if (activities.length === 0) {
+                activitiesList.innerHTML = '<p>No activities added yet. Add some above!</p>';
+                return;
+            }
+            
+            activities.forEach(activity => {
+                const activityEl = document.createElement('div');
+                activityEl.className = `activity-item ${activity.completed ? 'completed' : ''}`;
+                activityEl.innerHTML = `
+                    <span class="activity-text">${activity.name}</span>
+                    <span class="activity-points">${activity.points} pts</span>
+                    <div class="activity-actions">
+                        <button class="complete-btn" ${activity.completed ? 'disabled' : ''} 
+                            onclick="completeActivity(${activity.id})">
+                            ${activity.completed ? 'Completed' : 'Complete'}
+                        </button>
+                        <button class="delete-btn" onclick="deleteActivity(${activity.id})">Delete</button>
+                    </div>
+                `;
+                activitiesList.appendChild(activityEl);
+            });
+        }
+        
+        // Mark an activity as completed
+        function completeActivity(id) {
+            const activity = activities.find(act => act.id === id);
+            if (activity && !activity.completed) {
+                activity.completed = true;
+                totalPoints += activity.points;
+                saveActivities();
+            }
+        }
+        
+        // Complete the activity selected by the wheel
+        function completeSelectedActivity() {
+            const activityName = resultActivity.textContent;
+            const activity = activities.find(act => act.name === activityName && !act.completed);
+            
+            if (activity) {
+                completeActivity(activity.id);
+                resultContainer.classList.add('hidden');
+            }
+        }
+        
+        // Delete an activity
+        function deleteActivity(id) {
+            activities = activities.filter(activity => activity.id !== id);
+            saveActivities();
+        }
+        
+        // Save activities to local storage
+        function saveActivities() {
+            localStorage.setItem('activities', JSON.stringify(activities));
+            localStorage.setItem('totalPoints', totalPoints);
+            renderActivities();
+            updateStats();
+            drawWheel();
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const totalActivities = activities.length;
+            const completedActivities = activities.filter(act => act.completed).length;
+            
+            totalActivitiesEl.textContent = totalActivities;
+            completedActivitiesEl.textContent = completedActivities;
+            totalPointsEl.textContent = totalPoints;
+        }
+        
+        // Draw the wheel based on activities
+        function drawWheel() {
+            wheel.innerHTML = '';
+            
+            // Filter out completed activities for the wheel
+            const activeActivities = activities.filter(act => !act.completed);
+            
+            if (activeActivities.length === 0) {
+                wheel.innerHTML = '<div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; text-align: center; padding: 20px;">Add activities to spin the wheel!</div>';
+                spinBtn.disabled = true;
+                return;
+            }
+            
+            spinBtn.disabled = false;
+            
+            const segmentAngle = 360 / activeActivities.length;
+            
+            activeActivities.forEach((activity, index) => {
+                const segment = document.createElement('div');
+                segment.className = 'wheel-segment';
+                
+                const startAngle = index * segmentAngle;
+                const endAngle = (index + 1) * segmentAngle;
+                
+                segment.style.position = 'absolute';
+                segment.style.width = '100%';
+                segment.style.height = '100%';
+                segment.style.transform = `rotate(${startAngle}deg)`;
+                segment.style.transformOrigin = '50% 50%';
+                segment.style.clip = `rect(0px, 150px, 300px, 0px)`;
+                
+                const segmentInner = document.createElement('div');
+                segmentInner.style.position = 'absolute';
+                segmentInner.style.width = '100%';
+                segmentInner.style.height = '100%';
+                segmentInner.style.transform = `rotate(${segmentAngle}deg)`;
+                segmentInner.style.transformOrigin = '50% 50%';
+                segmentInner.style.clip = `rect(0px, 150px, 300px, 0px)`;
+                segmentInner.style.backgroundColor = colors[index % colors.length];
+                
+                // Add text label
+                const label = document.createElement('div');
+                label.className = 'segment-label';
+                label.textContent = activity.name;
+                label.style.position = 'absolute';
+                label.style.top = '20px';
+                label.style.left = '50%';
+                label.style.transform = 'rotate(' + (segmentAngle / 2) + 'deg) translateX(-50%)';
+                label.style.transformOrigin = 'left center';
+                label.style.color = 'white';
+                label.style.fontWeight = 'bold';
+                label.style.fontSize = '12px';
+                label.style.textShadow = '1px 1px 1px rgba(0,0,0,0.5)';
+                label.style.maxWidth = '100px';
+                label.style.overflow = 'hidden';
+                label.style.textOverflow = 'ellipsis';
+                label.style.whiteSpace = 'nowrap';
+                
+                segment.appendChild(segmentInner);
+                segment.appendChild(label);
+                wheel.appendChild(segment);
+            });
+        }
+        
+        // Spin the wheel
+        function spinWheel() {
+            if (isSpinning) return;
+            
+            const activeActivities = activities.filter(act => !act.completed);
+            
+            if (activeActivities.length === 0) {
+                alert('Add some activities first!');
+                return;
+            }
+            
+            isSpinning = true;
+            resultContainer.classList.add('hidden');
+            spinBtn.disabled = true;
+            
+            // Random rotation between 2 and 6 full rotations plus a random segment
+            const activeCount = activeActivities.length;
+            const segmentAngle = 360 / activeCount;
+            const randomSegment = Math.floor(Math.random() * activeCount);
+            const extraRotation = segmentAngle * randomSegment;
+            const totalRotation = 2160 + extraRotation; // 6 full rotations (2160 degrees) plus extra
+            
+            // Apply rotation
+            wheel.style.transform = `rotate(${totalRotation}deg)`;
+            
+            // After spinning is complete
+            setTimeout(() => {
+                isSpinning = false;
+                spinBtn.disabled = false;
+                
+                // Calculate which segment landed at the pointer (top)
+                const currentRotation = totalRotation % 360;
+                const segmentIndex = activeCount - 1 - Math.floor(currentRotation / segmentAngle);
+                const selectedActivity = activeActivities[segmentIndex];
+                
+                // Show result
+                resultActivity.textContent = selectedActivity.name;
+                resultPoints.textContent = `${selectedActivity.points} points`;
+                resultContainer.classList.remove('hidden');
+            }, 4000); // Match the CSS transition duration (4s)
+        }
+        
+        // Global functions for event handlers
+        window.completeActivity = completeActivity;
+        window.deleteActivity = deleteActivity;
+        
+        // Initialize the app
+        init();
+    </script>
 </body>
 </html>
