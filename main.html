@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Romantic Spin the Wheel</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background: linear-gradient(to right, #ffe6ec, #e0f7fa);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      color: #ff4d6d;
+    }
+
+    .wheel-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 20px;
+    }
+
+    canvas {
+      border-radius: 50%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    #spinBtn {
+      background-color: #ff4d6d;
+      color: white;
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎡 Our Romantic Wheel 🎡</h1>
+  <div class="wheel-container">
+    <canvas id="wheel" width="300" height="300"></canvas>
+  </div>
+  <button id="spinBtn">Spin the Wheel!</button>
+  <div id="result"></div>
+
+  <script>
+    const items = [
+      "Picnic at East Coast",
+      "Cooking night together",
+      "Try a new bar 🍸",
+      "Go dancing 💃",
+      "Binge-watch a series 📺",
+      "Take a walk under the stars 🌌",
+      "Paint each other 🎨",
+      "Random MRT stop adventure 🚇",
+    ];
+
+    const colors = ["#FFD6E8", "#E2F0CB", "#FFBCBC", "#C2E9FB", "#FFE0AC", "#D3B5E5", "#B2F7EF", "#FFDAC1"];
+
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const center = canvas.width / 2;
+    const radius = center;
+
+    let anglePerItem = (2 * Math.PI) / items.length;
+    let startAngle = 0;
+
+    function drawWheel() {
+      for (let i = 0; i < items.length; i++) {
+        const angle = startAngle + i * anglePerItem;
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, angle, angle + anglePerItem, false);
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(angle + anglePerItem / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#333";
+        ctx.font = "14px Arial";
+        ctx.fillText(items[i], radius - 10, 5);
+        ctx.restore();
+      }
+    }
+
+    drawWheel();
+
+    let isSpinning = false;
+
+    document.getElementById("spinBtn").addEventListener("click", () => {
+      if (isSpinning) return;
+      isSpinning = true;
+      const spinAngle = Math.random() * 360 + 720;
+      let rotation = 0;
+      const duration = 4000;
+      const startTime = performance.now();
+
+      function animate(time) {
+        const elapsed = time - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 4);
+        rotation = easeOut * spinAngle;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.translate(-center, -center);
+        drawWheel();
+        ctx.restore();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          const index = Math.floor((items.length - (rotation % 360) / 360 * items.length)) % items.length;
+          document.getElementById("result").textContent = `This week: ${items[index]} 💖`;
+        }
+      }
+
+      requestAnimationFrame(animate);
+    });
+  </script>
+</body>
+</html>
